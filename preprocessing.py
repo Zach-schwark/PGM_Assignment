@@ -79,6 +79,31 @@ class Preprocessing:
         attribute_dict[Preprocessing.attribute_names[len(Preprocessing.attribute_names)-1]] = pd.cut(rawData['class'],2,labels=[0,1])
 
         discretizedData = pd.DataFrame(attribute_dict)
+        
+        keeping_attributes = [
+            "X23",
+            "X1",
+            "X7",
+            "X49",
+            "X9",
+            "X3",
+            "X2",
+            "X59",
+            "X6",
+            "X4",
+            "X51",
+            "X8",
+            "class"
+        ]
+        
+        most_common_attributes = ['X52', 'X40', 'X25', 'X5', 'X9', 'X13', 'X58', 'X15', 'X27', 'X36', 'X22', 'X42', 'X31', 'X48', 'X32', 'X57', 'X12', 'X35', 'X6', 'X53', 'X16', 'X11', 'X55', 'X14', 'X29', 'X41','class']
+        
+        most_common_attributes_all_years = ['X16', 'X52', 'X32', 'X28', 'X5', 'X40', 'X9', 'X11', 'X59', 'X23', 'X25', 'X55', 'X17', 'X14', 'X29', 'X13', 'X58', 'X30', 'X57', 'X56', 'X40', 'X15', 'X27', 'X5', 'X25', 'X36', 'X22', 'X42', 'X31', 'X13', 'X12', 'X35', 'X9', 'X58', 'X11', 'X48', 'X52', 'X57', 'X55', 'X6', 'X15', 'X22', 'X52', 'X27', 'X40', 'X5', 'X25', 'X31', 'X12', 'X42', 'X13', 'X53', 'X57', 'X37', 'X48', 'X6', 'X35', 'X41', 'X32', 'X36', 'X22', 'X52', 'X15', 'X25', 'X27', 'X40', 'X58', 'X42', 'X13', 'X36', 'X31', 'X5', 'X53', 'X6', 'X35', 'X48', 'X9', 'X24', 'X38', 'X29', 'X25', 'X22', 'X27', 'X15', 'X52', 'X53', 'X14', 'X40', 'X42', 'X36', 'X54', 'X12', 'X58', 'X41', 'X44', 'X48', 'X9', 'X31', 'X32', 'X16', 'class']
+        
+        #for attribute in discretizedData.columns.values.tolist():
+        #    if attribute not in most_common_attributes_all_years:
+        #        del discretizedData[attribute]
+
 
         return discretizedData
     

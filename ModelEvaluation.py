@@ -2,7 +2,7 @@ from pgmpy.models import BayesianNetwork
 from pgmpy.inference import VariableElimination
 from  pgmpy.inference.EliminationOrder import WeightedMinFill
 from pgmpy.estimators import HillClimbSearch
-from pgmpy.estimators import BayesianEstimator
+from pgmpy.estimators import BayesianEstimator, MaximumLikelihoodEstimator
 from pgmpy.estimators import BicScore
 import pandas as pd
 import numpy as np
@@ -31,10 +31,11 @@ class ModelEvaluation:
             else:
                 equivalent_sample_size_dict[node] = 30
 
-
-        estimator = BayesianEstimator(model, training_data)
+        estimator = MaximumLikelihoodEstimator(model,training_data)
+        parameters = estimator.get_parameters(n_jobs=6)
+        #estimator = BayesianEstimator(model, training_data)
         #parameters = estimator.get_parameters(prior_type='dirichlet', pseudo_counts  = 2 )
-        parameters = estimator.get_parameters(prior_type='BDeu', equivalent_sample_size = equivalent_sample_size_dict )
+        #parameters = estimator.get_parameters(prior_type='BDeu', equivalent_sample_size = equivalent_sample_size_dict )
 
         #cpd_C = estimator.estimate_cpd('class', prior_type="dirichlet", pseudo_counts= 1)
         #parameters = estimator.get_parameters(prior_type='dirichlet', pseudo_counts = 1, n_jobs = 6)
