@@ -21,24 +21,19 @@ class ModelEvaluation:
         scoring_method=scoring_method, max_iter=int(1e4))
         model = BayesianNetwork(estimated_model.edges())
         
+        active_trail_nodes = model.active_trail_nodes('class')['class']
+        active_trail_nodes_list = list(active_trail_nodes)
+        original_nodes = list(model.nodes())
+        for node in original_nodes:
+            if node not in active_trail_nodes_list:
+                model.remove_node(node)
+        
         # Parameter Estimation
         
-        equivalent_sample_size_dict = {}
-
-        for node in model.nodes():
-            if node == 'class':
-                equivalent_sample_size_dict[node] = 30
-            else:
-                equivalent_sample_size_dict[node] = 30
 
         estimator = MaximumLikelihoodEstimator(model,training_data)
         parameters = estimator.get_parameters(n_jobs=6)
-        #estimator = BayesianEstimator(model, training_data)
-        #parameters = estimator.get_parameters(prior_type='dirichlet', pseudo_counts  = 2 )
-        #parameters = estimator.get_parameters(prior_type='BDeu', equivalent_sample_size = equivalent_sample_size_dict )
 
-        #cpd_C = estimator.estimate_cpd('class', prior_type="dirichlet", pseudo_counts= 1)
-        #parameters = estimator.get_parameters(prior_type='dirichlet', pseudo_counts = 1, n_jobs = 6)
         for i in range(len(parameters)):
             model.add_cpds(parameters[i])
             #print(parameters[i])
@@ -55,9 +50,6 @@ class ModelEvaluation:
             
 
         inference = VariableElimination(model)
-        elimination_order = WeightedMinFill(model).get_elimination_order(model.nodes(),show_progress=False)
-        elimination_order.remove('class')
-
 
         y_pred = []
         y_true = []
@@ -127,10 +119,15 @@ class ModelEvaluation:
         model = LogisticRegression()
 
         # Initialize a list to store the evaluation scores
-        accuracyScores = []
-        f1scores = []
-        precisionScores = []
-        recallScores = []
+        accuracyScore_list = []
+        balancedAccuracyScore_list = []
+        f1score_list = []
+        precisionScore_list  = []
+        recallScore_list  = []
+        
+        f1scoresWeighted_list  = []
+        precisionScoresWeighted_list  = []
+        recallScoresWeighted_list  = []
         
         # Iterate through each fold
         for train_indices, test_indices in folds:
@@ -150,8 +147,11 @@ class ModelEvaluation:
 
             
             # Train the model on the training data
-            model = ModelEvaluation.trainModel(training_data)
-
+            try:
+                model = ModelEvaluation.trainModel(training_data)
+            except:
+                print("An error occurred during either structure learning or parameter estimation.")
+                continue
             # Make predictions on the test data
             try:
                 y_pred, y_true = ModelEvaluation.performInference(model = model, testing_evidence = testing_evidence_list, testing_targets=testing_targets)
@@ -161,22 +161,42 @@ class ModelEvaluation:
             
             # Calculate the accuracy score for this fold
             accuracyScore = accuracy_score(y_true, y_pred)
+            balancedAccuracyScore = balanced_accuracy_score(y_true, y_pred,adjusted=True)
             f1score = f1_score(y_true, y_pred)
             precisionScore = precision_score(y_true, y_pred)
             recallScore = recall_score(y_true, y_pred)
+            
+            f1_score_weighted = f1_score(y_true, y_pred, average = 'weighted')
+            precision_score_weighted = precision_score(y_true, y_pred, average = 'weighted')
+            recall_score_weighted = recall_score(y_true, y_pred, average = 'weighted')
 
             # Append the fold score to the list of scores
-            accuracyScores.append(accuracyScore)
-            f1scores.append(f1score)
-            precisionScores.append(precisionScore)
-            recallScores.append(recallScore)
+            accuracyScore_list.append(accuracyScore)
+            balancedAccuracyScore_list.append(balancedAccuracyScore)
+            f1score_list.append(f1score)
+            precisionScore_list.append(precisionScore)
+            recallScore_list.append(recallScore)
+            
+            f1scoresWeighted_list.append(f1_score_weighted)
+            precisionScoresWeighted_list.append(precision_score_weighted)
+            recallScoresWeighted_list.append(recall_score_weighted)
 
         # Calculate the mean accuracy across all folds
-        mean_accuracy = np.mean(accuracyScores)
-        mean_f1 = np.mean(f1score)
-        mean_precision = np.mean(precisionScore)
-        mean_reall = np.mean(recallScore)
-        print("Mean Accuracy:", mean_accuracy)
-        print("Mean F1:", mean_f1)
-        print("Mean Precision:", mean_precision)
-        print("Mean Recall:", mean_reall)
+        mean_accuracy = np.mean(accuracyScore_list )
+        mean_balanced_accuracy = np.mean(balancedAccuracyScore_list)
+        mean_f1 = np.mean(f1score_list )
+        mean_precision = np.mean(precisionScore_list )
+        mean_reall = np.mean(recallScore_list )
+        
+        mean_f1_weighted = np.mean(f1scoresWeighted_list )
+        mean_precision_weighted = np.mean(precisionScoresWeighted_list )
+        mean_reall_weighted = np.mean(recallScoresWeighted_list)
+        print("Mean Accuracy:", mean_accuracy.round(4))
+        print("Mean Balancedd Accuracy:", mean_balanced_accuracy.round(4))
+        print("Mean F1:", mean_f1.round(4))
+        print("Mean Precision:", mean_precision.round(4))
+        print("Mean Recall:", mean_reall.round(4))
+        
+        print("Mean Weighted F1:", mean_f1_weighted.round(4))
+        print("Mean Weighted Precision:", mean_precision_weighted.round(4))
+        print("Mean Weighted Recall:", mean_reall_weighted.round(4))
